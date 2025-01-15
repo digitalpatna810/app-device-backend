@@ -3,6 +3,7 @@ module.exports = {
       {
         name: "device-manager-backend",
         script: "src/app.ts",
+        watch: "true",
         interpreter: "ts-node", // Use ts-node as the interpreter
         env: {
           NODE_ENV: "development",
