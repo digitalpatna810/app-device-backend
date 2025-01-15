@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /posts/user-posts:
+ * /api/posts/user-posts:
  *   get:
  *     summary: Retrieve all posts and videos of a user
  *     tags: [Posts]
@@ -42,7 +42,7 @@
 
 /**
  * @swagger
- * /post/{postId}:
+ * /api/post/{postId}:
  *   get:
  *     summary: Retrieve a post by its ID
  *     tags: [Posts]
@@ -66,7 +66,7 @@
 
 /**
  * @swagger
- * /video/{videoId}:
+ * /api/video/{videoId}:
  *   get:
  *     summary: Retrieve a video by its ID
  *     tags: [Videos]
@@ -90,7 +90,7 @@
 
 /**
  * @swagger
- * /post/image:
+ * /api/post/image:
  *   post:
  *     summary: Upload an image post
  *     tags: [Posts]
@@ -123,7 +123,7 @@
 
 /**
  * @swagger
- * /post/video:
+ * /api/post/video:
  *   post:
  *     summary: Upload a video post
  *     tags: [Videos]
@@ -154,7 +154,7 @@
 
 /**
  * @swagger
- * /deleteContent:
+ * /api/deleteContent:
  *   delete:
  *     summary: Delete a post or video by ID
  *     tags: [Posts, Videos]
@@ -182,7 +182,7 @@
 
 /**
  * @swagger
- * /filterPosts:
+ * /api/filterPosts:
  *   get:
  *     summary: Filter posts by category tag
  *     tags: [Posts]
