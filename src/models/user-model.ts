@@ -17,6 +17,10 @@ export interface IUser extends Document {
   verificationToken?: string;
   verificationTokenExpiry?: Date;
   refreshToken?: string;
+  profileImage?: {
+    url?: string;
+    public_id?: string;
+  };
   role: UserRole;
 }
 

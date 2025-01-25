@@ -1,5 +1,5 @@
 import express from 'express';
-import { signupAdmin, loginAdmin, getAdminProfile, getAllUsers, deleteUser, updateUsersRole, getUsersByIds, reviewPost, getPosts, getVideos } from '../controllers/admin-controller';
+import { signupAdmin, loginAdmin, getAdminProfile, getAllUsers, deleteUser, updateUsersRole, getUsersByIds, reviewPost, getPosts, getVideos, getContent, getAllUsersExceptAdmin, getDeletedUsers, retrieveUser } from '../controllers/admin-controller';
 import { authorizeAdmin, verifyJWT } from '../middlewares/auth-middleware';
 
 const router = express.Router();
@@ -14,10 +14,12 @@ router.post('/admin/login', loginAdmin);
 router.get('/admin/profile', verifyJWT,authorizeAdmin, getAdminProfile);
 router.get('/admin/users', verifyJWT,authorizeAdmin, getAllUsers);
 router.post("/admin/profiles",verifyJWT, authorizeAdmin, getUsersByIds);
-router.get("/admin/usersList", verifyJWT, authorizeAdmin, getAllUsers);
-router.delete("/admin/deleteUser/:userId", verifyJWT, authorizeAdmin, deleteUser);
+router.get("/admin/usersList", verifyJWT, authorizeAdmin, getAllUsersExceptAdmin);
+router.delete("/admin/deleteUser", verifyJWT, authorizeAdmin, deleteUser);
+router.get("/admin/deletedUsersList", verifyJWT, authorizeAdmin, getDeletedUsers);
 router.put("/admin/updateUserRole/:userId", verifyJWT, authorizeAdmin, updateUsersRole);
-
+router.get("/admin/getContent/:id", verifyJWT, authorizeAdmin, getContent);
+router.post("/admin/retrieve", verifyJWT, authorizeAdmin, retrieveUser);
 //---------------ADMIN CONTENT ---------------
 
 router.put('/admin/reviewPost', verifyJWT, authorizeAdmin, reviewPost);

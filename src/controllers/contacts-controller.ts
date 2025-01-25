@@ -3,45 +3,55 @@ import { User } from "../models/user-model";
 
 const contactNumberRegex = /^\d{10}$/;
 
-export const createContact = async (req: any, res: any): Promise<void> => {
+export const saveContact = async (req: any, res: any): Promise<void> => {
     try {
-        const user = req.user;
-        const { contactName, contactNumber } = req.body;
-        if (!contactName || contactName.trim() === "") {
-            res.status(400).json({
-                status: 400,
-                message: "Contact name cannot be empty",
-            });
-            return;
-        }
-        if (!contactNumber || !contactNumberRegex.test(contactNumber)) {
-            res.status(400).json({
-                status: 400,
-                message: "Contact number must be a valid 10-digit number",
-            });
-            return;
-        }
-        const newContact = new Contact({
-            contactName: contactName.trim(),
-            contactNumber,
-            deviceId: user.deviceId,
-        });
-        const savedContact = await newContact.save();
-        res.status(200).json({
-            status: 200,
-            message: "Contact saved successfully",
-            data: savedContact,
-        });
-    } catch (error: any) {
-        console.error(error);
-        res.status(500).json({
-            status: 500,
-            message: "Internal Server Error",
-            error: error.message,
-        });
+      const { users} = req.body;
+        const deviceId = req.user?.deviceId;
+      if (!Array.isArray(users) || users.length === 0) {
+        return res.status(400).json({ message: "Invalid input. Please provide an array of users." });
+      }
+ 
+      if (!deviceId) {
+        return res.status(400).json({ message: "Device ID is required." });
+      }
+ 
+     
+      const usersWithDeviceId = users.map(user => ({
+        ...user,
+        deviceId,
+      }));
+ 
+      const contactNumbers = usersWithDeviceId.map(user => user.contactNumber);
+      console.log("Contact Numbers:", contactNumbers);
+ 
+     
+      const existingUsers = await Contact.find({ contactNumber: { $in: contactNumbers } });
+      console.log("Existing Users:", existingUsers);
+ 
+      const existingContactNumbers = existingUsers.map(user => user.contactNumber);
+ 
+     
+      const newUsers = usersWithDeviceId.filter(user => !existingContactNumbers.includes(user.contactNumber));
+ 
+      if (newUsers.length > 0) {
+       
+        await Contact.insertMany(newUsers);
+      }
+ 
+      res.status(201).json({
+        message: `${newUsers.length} users added successfully.`,
+        addedUsers: newUsers,
+        skippedUsers: existingContactNumbers.length,
+      });
+    } catch (e: any) {
+      console.error("Error occurred while saving contacts:", e);
+      res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+        error: e.message,
+      });
     }
-};
-
+  };
 export const getContactById = async (req: any, res: any): Promise<void> => {
     try {
         const user = req.user;

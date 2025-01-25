@@ -6,6 +6,7 @@ import { sendNotification } from "../services/notification-service"
 import { sendEmail } from '../services/email-service';
 import { Post } from '../models/post-model';
 import { Video } from '../models/video-model';
+import { DeletedUser } from '../models/deletedUser-model';
 
 //------------------------ADMIN AUTH----------------------------
 
@@ -82,19 +83,19 @@ export const loginAdmin = async (req: any, res: any) => {
 //----------------------ADMIN PROFILE-------------------
 
 export const getAdminProfile = async (req: any, res: any) => {
-    try {
-      const adminId = req.user?.id;
-      const admin = await User.findById(adminId).select('-password');
-      if (!admin) {
-        return res.status(404).json({ message: 'Admin not found' });
-      }
-  
-      res.status(200).json({ admin });
+  try {
+    const userId = req.user?.userId;
+    const admin = await User.findById(userId).select('-password');
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
 
-      } catch (error: any) {
-        console.error('Error retrieving admin profile:', error);
-        res.status(500).json({ message: 'Server error', error });
-      }
+    res.status(200).json({ admin });
+
+    } catch (error: any) {
+      console.error('Error retrieving admin profile:', error);
+      res.status(500).json({ message: 'Server error', error });
+    }
 };
 export const getUsersByIds = async (req: Request, res: Response) => {
   try {
@@ -153,26 +154,147 @@ export const updateUsersRole = async (req: Request, res: Response): Promise<void
 }
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = req.params;
-    const deletedUser = await User.findByIdAndUpdate(userId);
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(400).json({
+        status: 400,
+        message: "User not found",
+      });
+      return;
+    }
+    const newDeletedUser = new DeletedUser({
+      originalUserId: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      deviceId: user.deviceId,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      password: user.password,
+      isVerified: user.isVerified,
+      verificationToken: user.verificationToken,
+      verificationTokenExpiry: user.verificationTokenExpiry,
+      refreshToken:user.refreshToken,
+      profileImage: user.profileImage,
+      role: user.role,
+    });
+    await newDeletedUser.save();
+
+    const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
       res.status(400).json({
         status: 400,
-        mesaage: "User not found"
+        message: "Unable to delete user"
       });
       return;
     }
     res.status(200).json({
       status: 200,
-      mesaage: `User deleted successfully`,
+      message: "User deleted successfully and archived.",
       data: deletedUser
     });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+export const retrieveUser = async (req: any, res: any):Promise<void>=>{
+  try {
+    const { deletedEmail, deletedphoneNumber } = req.body; 
+    if (!deletedEmail && !deletedphoneNumber) {
+      res.status(400).json({
+        status: 400,
+        message: "Provide all info"
+      });
+      return;
+    }
+    const deletedUser = await DeletedUser.findOne(deletedEmail ? { email: deletedEmail } : { phoneNumber: deletedphoneNumber});
+    if (!deletedUser) {
+      res.status(404).json({
+        status: 404,
+        message: "Deleted user not found",
+      });
+      return;
+    }
+    const existingUser = await User.findOne({
+      $or: [
+        { email: deletedUser.email },
+        { phoneNumber: deletedUser.phoneNumber },
+      ],
+    });
+
+    if (existingUser) {
+      res.status(400).json({
+        status: 400,
+        message: "User with the same email, phone number already exists",
+      });
+      return;
+    }
+    const restoredUser = new User({
+      _id: deletedUser.originalUserId,
+      firstName: deletedUser.firstName,
+      lastName: deletedUser.lastName,
+      deviceId: deletedUser.deviceId,
+      phoneNumber: deletedUser.phoneNumber,
+      email: deletedUser.email,
+      profileImage: deletedUser.profileImage,
+      password: deletedUser.password, 
+      isVerified: deletedUser.isVerified,
+      verificationToken: deletedUser.verificationToken,
+      verificationTokenExpiry: deletedUser.verificationTokenExpiry,
+      refreshToken: deletedUser.refreshToken,
+      role: deletedUser.role,
+    });
+    const restoredUserSaved = await restoredUser.save();
+    await DeletedUser.findByIdAndDelete(deletedUser._id);
+
+    res.status(200).json({
+      status: 200,
+      message: "User restored successfully",
+      data: restoredUserSaved,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}
+export const getAllUsersExceptAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const usersList = await User.find().select("-password");
+    if (usersList.length === 0) {
+      res.status(400).json({ status: 400, message: "Users not found" });
+      return;
+    }
+    const userList = usersList.filter((user) => (
+      user.role != "admin"
+    ))
+    res.status(200).json({ status: 200, message: "Users fetched successfully", data: userList });
   } catch (error:any) {
     console.error(error);
     res.status(500).json({ status: 500, message: "Internal server error", error: error.message });
   }
 }
-
+export const getDeletedUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const deletedusersList = await DeletedUser.find().select("-password");
+    if (deletedusersList.length === 0) {
+      res.status(400).json({ status: 400, message: "Users not found" });
+      return;
+    }
+    res.status(200).json({ status: 200, message: "Users fetched successfully", data: deletedusersList });
+  } catch (error:any) {
+    console.error(error);
+    res.status(500).json({ status: 500, message: "Internal server error", error: error.message });
+  }
+}
 //-----------------------------ADMIN CONTENT---------------------------
 
 export const reviewPost = async (req: any, res: any): Promise<void> => {
@@ -270,3 +392,26 @@ export const getVideos = async (req: Request, res: Response):Promise<void> => {
     res.status(500).json({ message: 'Failed to fetch videos', error });
   }
 };
+export const getContent = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    let content = await Post.findById(id);
+    if (!content) {
+      content = await Video.findById(id);
+    }
+
+    if (!content) {
+      res.status(400).json({ status: 400, message: "Content not found" });
+      return;
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: "Content fetched successfully",
+      data: content,
+    });
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    res.status(500).json({ message: 'Failed to fetch videos', error });
+  }
+}
