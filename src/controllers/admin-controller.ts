@@ -84,19 +84,22 @@ export const loginAdmin = async (req: any, res: any) => {
 
 export const getAdminProfile = async (req: any, res: any) => {
   try {
-    const userId = req.user?.userId;
+    console.log(req.user);
+    const userId = req.user?.id;
+    console.log(userId)
     const admin = await User.findById(userId).select('-password');
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
     }
-
+ 
     res.status(200).json({ admin });
-
+ 
     } catch (error: any) {
       console.error('Error retrieving admin profile:', error);
       res.status(500).json({ message: 'Server error', error });
     }
 };
+ 
 export const getUsersByIds = async (req: Request, res: Response) => {
   try {
     const { userIds } = req.body;
