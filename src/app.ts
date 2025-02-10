@@ -6,6 +6,7 @@ import postRoute from "./routes/post-route";
 import contactsRoutes from "./routes/contacts-route";
 import notificationRoutes from "./routes/notification-route";
 import dotenv from "dotenv";
+import locationRoutes from "./routes/location-route"
 import cors from "cors";
 import connectDB from "./config/mongodb";
 import swaggerDocs from './config/swagger';
@@ -22,9 +23,9 @@ app.use("/api", adminRoutes);
 app.use("/api", postRoute);
 app.use("/api", contactsRoutes);
 app.use("/api", notificationRoutes);
-
+app.use("/api", locationRoutes);
 swaggerDocs(app);
-
+// console.log("hello");
 app.use(cors({   origin: '*', 
 methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],                                                              
 allowedHeaders: ['Content-Type', 'Authorization'], }));
