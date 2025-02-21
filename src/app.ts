@@ -21,10 +21,6 @@ app.use(cors());
 
 app.use(express.static(path.join(__dirname, "../build")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../build", "index.html"));
-});
-
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use("/api", profileRoutes);
@@ -35,6 +31,7 @@ app.use("/api", contactsRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", locationRoutes);
 swaggerDocs(app);
+
 // console.log("hello");
 app.use(cors({   origin: '*', 
 methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],                                                              
@@ -48,6 +45,10 @@ app.use((req, res, next) => {
  next(); })
 
 const port = process.env.PORT || 8000;
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../build", "index.html"));
+});
 
 connectDB().then(() => {
   app.listen(port, () => {
