@@ -10,13 +10,16 @@ import locationRoutes from "./routes/location-route"
 import cors from "cors";
 import connectDB from "./config/mongodb";
 import swaggerDocs from './config/swagger';
+import path from "path";
 
 const app : Express = express();
 
 dotenv.config();
 app.use(express.json());
 app.use(cors());
-
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../build", "index.html"));
+});
 app.use("/api", profileRoutes);
 app.use("/api", authRoutes);
 app.use("/api", adminRoutes);
