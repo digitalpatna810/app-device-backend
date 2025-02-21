@@ -11,7 +11,6 @@ import cors from "cors";
 import connectDB from "./config/mongodb";
 import swaggerDocs from './config/swagger';
 import path from "path";
-import mime from "mime-types";
 
 const app : Express = express();
 
@@ -19,13 +18,7 @@ dotenv.config();
 app.use(express.json());
 app.use(cors());
 
-
-app.use((req, res, next) => {
-  if (req.path.endsWith(".js")) {
-    res.type(mime.lookup(req.path) || "application/javascript");
-  }
-  next();
-});
+app.use(express.static(path.join(__dirname, "../build")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../build", "index.html"));
